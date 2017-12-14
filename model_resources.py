@@ -1,7 +1,7 @@
 from neuron import h
 import numpy as np
 
-h.tstop = 2.0
+h.tstop = 20.0
 dt = 0.025
 timesteps = int(h.tstop/dt)
 duration = h.tstop
@@ -29,6 +29,7 @@ class Fiber:
         for section in range(section_count):
             self.points.append(Point([self.loc.getLoc()[0], self.loc.getLoc()[1], self.loc.getLoc()[2] + (self.section_length/2) + (section*self.section_length)]))
             self.sections.append(h.Section())
+            self.sections[section].diam = self.diam
             self.sections[section].nseg = 1
             self.sections[section].insert("hh")
             self.sections[section].L = self.section_length

@@ -7,7 +7,7 @@ from matplotlib import pyplot as plt
 
 resistance = (300.0 * 10000.0) # ohm * um
 h.celsius = 6.3
-h.tstop = 5
+h.tstop = 20
 dt = 0.025
 timesteps = int(h.tstop/dt)
 duration = h.tstop

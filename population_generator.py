@@ -8,7 +8,7 @@ filename = "output2"
 nerve_radius = 250 #um
 fiber_density = 0.0016 # fibers/um2
 fiber_diam_mean = 6
-fiber_diam_sdev = 0
+fiber_diam_sdev = 1
 
 pop_file = open(filename+"_r"+str(nerve_radius)+".csv", 'w')
 
@@ -22,8 +22,8 @@ for x_loc in x_locations:
     for y_loc in y_locations:
         if (x_loc**2 + y_loc**2)**0.5 <= nerve_radius:
             diam = fiber_diam_mean + (fiber_diam_sdev * np.random.randn())
-            if (x_loc > 0):
-                diam *= 2   # for model checking
+            #if (x_loc > -100):
+            #    diam *= 2   # for model checking
             fiber_diameters.append(diam)
             w.writerow([str(diam), str(x_loc), str(y_loc)])
             
