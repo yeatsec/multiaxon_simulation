@@ -1,45 +1,45 @@
 from neuron import h, gui
+import csv
 import model_resources as m_r 
 import numpy as np
 from matplotlib import pyplot as plt 
 
 
-resistivity = (300.0 * 10000.0) # ohm * um
-h.celsius = 37
-h.tstop = 2.0
+resistance = (300.0 * 10000.0) # ohm * um
+h.celsius = 6.3
+h.tstop = 5
 dt = 0.025
 timesteps = int(h.tstop/dt)
 duration = h.tstop
+
+pop_filename = "output2_r250.csv"
 
 t_vals = np.arange(0, h.tstop, step=h.dt, dtype=float)
 
 # model parameters
 nerve_radius = 250  # um
-fiber_density = 0.016   # fibers/um2
-fiber_spacing = (fiber_density)**(-0.5)  # um
-fiber_diam = 10  # um
 fiber_length = 15000
-stim_to_record = 10000
+stim_to_record = 15000
 recording_radius = 100
 point_of_ref = m_r.Point([0, nerve_radius + 10, stim_to_record])
 
-# set up population in coordinate format, need prodanov statistics
+# fetch and read population file
 fibers = list()
-x_locations = np.arange(-nerve_radius, nerve_radius, step=fiber_spacing, dtype=float)
-y_locations = np.arange(-nerve_radius, nerve_radius, step=fiber_spacing, dtype=float)
-print "arranging fibers"
-count = 0
+fiber_diameters = list()
 nerve_x = list()
 nerve_y = list()
-for x_loc in x_locations:
-    for y_loc in y_locations:
-        if (x_loc**2 + y_loc**2)**0.5 <= nerve_radius:
-            nerve_x.append(x_loc)
-            nerve_y.append(y_loc)
-            fibers.append(m_r.Fiber((3*np.random.randn()) + fiber_diam, m_r.Point([x_loc, y_loc, 0]), fiber_length, 150, stim_to_record - recording_radius, stim_to_record + recording_radius))
-            count += 1
-            print count
-plt.scatter(nerve_x, nerve_y, c='b', alpha=0.3)
+
+pop_file = open(pop_filename, mode='r')
+read = csv.reader(pop_file, delimiter='\t', quotechar='|')
+for row in read:
+    fiber_diameters.append(float(row[0]))
+    nerve_x.append(float(row[1]))
+    nerve_y.append(float(row[2]))
+    fibers.append(m_r.Fiber(float(row[0]), m_r.Point([float(row[1]), float(row[2]), 0]), fiber_length, 150, stim_to_record - recording_radius, stim_to_record + recording_radius))
+pop_file.close()
+
+
+plt.scatter(nerve_x, nerve_y, s=[np.pi*((diam/2)**2) for diam in fiber_diameters], c='b', alpha=0.3)
 plt.show()
 print "population size: ", len(fibers)
 # package fibers, activation, recording
@@ -71,7 +71,7 @@ for fiber_index in range(len(fibers)):  # iterate fibers within population
         section_point = fiber_points_vals[fiber_index][section_index]
         r = section_point.getDist(point_of_ref)
         for dt_index in range(int(h.tstop/h.dt)):   # iterate time values within section var
-            cap_signal[dt_index] += fiber_sa_vals[fiber_index] * (fiber_i_na_vals[fiber_index][section_index][dt_index] + fiber_i_k_vals[fiber_index][section_index][dt_index]) * resistivity / (4 * np.pi * r)
+            cap_signal[dt_index] += fiber_sa_vals[fiber_index] * (fiber_i_na_vals[fiber_index][section_index][dt_index] + fiber_i_k_vals[fiber_index][section_index][dt_index]) * resistance / (4 * np.pi * r)
 
 plt.plot(t_vals, cap_signal)
 plt.title("Extracellular Voltage due to a Compound Action Potential")
