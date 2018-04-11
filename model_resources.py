@@ -1,10 +1,26 @@
 from neuron import h
 import numpy as np
 
+print "\n i see model_resources\n"
+
 h.tstop = 20.0
 dt = 0.025
 timesteps = int(h.tstop/dt)
 duration = h.tstop
+
+resistance = 300.0 * 10000.0 # ohm * um
+
+# ^^ these are redeclared eventually 
+
+def init_model(t_stop, delta_t, resist):
+    h.tstop = t_stop
+    dt = delta_t
+    timesteps = int(h.tstop/dt) 
+    duration = h.tstop 
+    resistance = resist
+
+def rModel(distance): # returns scalar that should be multiplied by a current value
+    return resistance / (4 * np.pi * distance)
 
 
 class Fiber:
@@ -12,7 +28,7 @@ class Fiber:
     data and relevant operations on 
     unmyelinated axons"""
 
-    def __init__(self, diameter, location, length, section_count, record_begin, record_end):
+    def __init__(self, diameter, location, length, section_count, record_begin, record_end, mod_name):
         self.diam = diameter
         self.loc = location 
         self.l = length
@@ -31,7 +47,7 @@ class Fiber:
             self.sections.append(h.Section())
             self.sections[section].diam = self.diam
             self.sections[section].nseg = 1
-            self.sections[section].insert("hh")
+            self.sections[section].insert(mod_name)
             self.sections[section].L = self.section_length
             if self.points[section].getLoc()[2] >= record_begin and self.points[section].getLoc()[2] <= record_end:
                 # section is within recording area
@@ -76,6 +92,15 @@ class Fiber:
     def getSectionSA(self):
         return self.section_sa
 
+    def getCurrentSignalAt(self, index): # returns current signal for section at given index
+        na_cur_signal = self.na_vectors[index]
+        k_cur_signal = self.k_vectors[index]
+        sig_len = len(na_cur_signal)
+        current_signal = [0.0] * sig_len
+        for i in range(sig_len):
+            current_signal[i] = self.section_sa * (na_cur_signal[i] + k_cur_signal[i])
+        return current_signal
+
 class Point:
     """This object packages 3D location info"""
 
@@ -89,3 +114,71 @@ class Point:
 
     def getDist(self, other_point):
         return ((self.x - other_point.getLoc()[0])**2 + (self.y - other_point.getLoc()[1])**2 + (self.z - other_point.getLoc()[2])**2)**0.5
+
+class voltPoint:
+    """This class packages 3D location with a signal waveform component.
+    To be used for recording the extracellular potential of a CAP"""
+
+    def __init__(self, pt, sigSize):
+        """initializes a vPoint at Point pt with empty signal vector of size size"""
+        self.loc = pt
+        self.signal = [0.0] * sigSize
+
+    def clearSignal(self):
+        for i in range(len(self.signal)):
+            self.signal[i] = 0.0
+
+    def getSignal(self):
+        return self.signal
+
+    def addSignalAt(self, index, value):
+        self.signal[index] += value
+
+    def addVoltFromPoint(self, srcPoint, srcSignal):
+        sigLength = len(srcSignal)
+        dist = self.loc.getDist(srcPoint)
+        for index in range(sigLength):
+            self.addSignalAt(index, srcSignal[index]*rModel(dist))
+
+    def addVoltFromFiber(self, fib):
+        fib_vec_points = fib.get_vector_points()
+        for i in range(fib.getSectionCount()):
+            self.addVoltFromPoint(fib_vec_points[i], fib.getCurrentSignalAt(i))
+
+
+
+class voltCuff:
+    """This class packages a set of vPoints together in a ring fomation to resemble
+    a Monopolar cuff. can use multiple to resemble Bipolar and Tripolar recording schemes"""
+    def __init__(self, centerPoint, sigSize, radius, numPoints):
+        self.rec_points = list()
+        self.sigSize = sigSize
+        terminal = voltPoint(centerPoint, sigSize)
+        radians = np.linspace(0, 2*np.pi, numpoints, endpoint=False)
+        for rad in radians: # arrange voltage points in circle
+            self.rec_points.append(voltPoint([radius*np.cos(rad) + centerPoint.getLoc()[0], 
+                radius*np.sin(rad) + centerPoint.getLoc()[1],
+                centerPoint.getLoc()[2]]))
+
+    def calculateSignal(self):
+        self.terminal.clearSignal()
+        for rPoint in self.rec_points:
+            r_sig = rPoint.getSignal()
+            for i in self.sigSize:
+                self.terminal.addSignalAt(i, r_sig[i]/self.numPoints)
+
+
+    def getSignal(self):
+        return terminal.getSignal()
+            
+
+    def addVoltFromSrc(self, srcPoint, srcSignal):
+        # incorporate resistive model here
+        for rPoint in self.rec_points:
+            rPoint.addVoltFromPoint(srcPoint, srcSignal)
+
+    def addVoltFromFiber(self, fib):
+        # iterate through sections and call addVoltFromSrc
+        for rPoint in self.rec_points:
+            rPoint.addVoltFromFiber(self, fib)
+

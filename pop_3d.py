@@ -9,7 +9,7 @@ fiber_len = 15000
 nerve_radius = 250
 stim_to_record = 10000
 
-point_of_ref = [0, nerve_radius + 50, stim_to_record]
+point_of_ref = [0, nerve_radius + 10, stim_to_record]
 
 # fetch and read population file
 fiber_diameters = list()
@@ -41,8 +41,8 @@ for index in range(len(fiber_diameters)):
 # plot point_of_ref in red
 u = np.linspace(0, 2 * np.pi, 100)
 v = np.linspace(0, np.pi, 100)
-x = 10 * np.outer(np.cos(u), np.sin(v)) + point_of_ref[0]
-y = 10 * np.outer(np.sin(u), np.sin(v)) + point_of_ref[1]
-z = 10 * np.outer(np.ones(np.size(u)), np.cos(v)) + point_of_ref[2]
+x = 100 * np.outer(np.cos(u), np.sin(v)) + point_of_ref[0]
+y = 100 * np.outer(np.sin(u), np.sin(v)) + point_of_ref[1]
+z = 100 * np.outer(np.ones(np.size(u)), np.cos(v)) + point_of_ref[2]
 axes.plot_surface(x, y, z, color='r')
 plt.show()
