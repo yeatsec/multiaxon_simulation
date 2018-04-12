@@ -18,6 +18,7 @@ def init_model(t_stop, delta_t, resist):
     timesteps = int(h.tstop/dt) 
     duration = h.tstop 
     resistance = resist
+    print "m_r timesteps: ", timesteps
 
 def rModel(distance): # returns scalar that should be multiplied by a current value
     return resistance / (4 * np.pi * distance)
@@ -61,7 +62,7 @@ class Fiber:
             if section > 0: # connect section to previous section
                 self.sections[section].connect(self.sections[section-1])
         self.stim = h.IClamp(0.5, sec=self.sections[5])
-        self.stim.amp = 10000.0
+        self.stim.amp = 20.0
         self.stim.delay = 0.0
         self.stim.dur = 0.5
 
@@ -132,17 +133,21 @@ class voltPoint:
         return self.signal
 
     def addSignalAt(self, index, value):
-        self.signal[index] += value
+        try:
+            self.signal[index] += value
+        except:
+            print "\nexception generated from index: ", index
 
     def addVoltFromPoint(self, srcPoint, srcSignal):
-        sigLength = len(srcSignal)
+        sigLength = len(srcSignal) - 1 # vectors seem to have an extra empty value at end
         dist = self.loc.getDist(srcPoint)
         for index in range(sigLength):
             self.addSignalAt(index, srcSignal[index]*rModel(dist))
 
     def addVoltFromFiber(self, fib):
         fib_vec_points = fib.get_vector_points()
-        for i in range(fib.getSectionCount()):
+        for i in range(len(fib.get_vector_points())):
+            print "vector size: ", len(fib.getCurrentSignalAt(i))
             self.addVoltFromPoint(fib_vec_points[i], fib.getCurrentSignalAt(i))
 
 

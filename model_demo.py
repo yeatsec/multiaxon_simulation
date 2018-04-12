@@ -13,6 +13,8 @@ timesteps = int(h.tstop/dt)
 duration = h.tstop
 m_r.init_model(h.tstop, dt, resistance) # ensure that the fiber resources have the same time dimensions
 
+print "model demo timesteps: ", timesteps
+
 pop_filename = "output2_r250.csv"
 mod_name = "apl"
 
@@ -22,9 +24,11 @@ t_vals = np.arange(0, h.tstop, step=h.dt, dtype=float)
 nerve_radius = 250  # um
 fiber_length = 15000
 stim_to_record = 15000
-recording_radius = 100
+recording_radius = 1000000000 # try whole axon
 point_for_rec = m_r.Point([0, nerve_radius + 10, stim_to_record])
+point_for_rec2 = m_r.Point([0, nerve_radius + 10, stim_to_record - 1000])
 point_of_ref = m_r.voltPoint(point_for_rec, timesteps)
+point_of_ref2 = m_r.voltPoint(point_for_rec2, timesteps)
 
 # fetch and read population file
 fibers = list()
@@ -78,8 +82,14 @@ h.run()
 
 for fib in fibers:
     point_of_ref.addVoltFromFiber(fib)
+    point_of_ref2.addVoltFromFiber(fib)
 
-plt.plot(t_vals, point_of_ref.getSignal())
+volt_signal = list()
+p_signal = point_of_ref2.getSignal()
+n_signal = point_of_ref.getSignal()
+for i in range(timesteps):
+    volt_signal.append(p_signal[i]-n_signal[i])
+plt.plot(t_vals, volt_signal)
 plt.title("Extracellular Voltage due to a Compound Action Potential")
 plt.xlabel("Time (ms)")
 plt.ylabel("Voltage (mV)")
