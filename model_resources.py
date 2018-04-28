@@ -49,6 +49,7 @@ class Fiber:
             self.sections[section].diam = self.diam
             self.sections[section].nseg = 1
             self.sections[section].insert(mod_name)
+            # self.sections[section].insert('pas')
             self.sections[section].L = self.section_length
             if self.points[section].getLoc()[2] >= record_begin and self.points[section].getLoc()[2] <= record_end:
                 # section is within recording area
@@ -147,7 +148,7 @@ class voltPoint:
     def addVoltFromFiber(self, fib):
         fib_vec_points = fib.get_vector_points()
         for i in range(len(fib.get_vector_points())):
-            print "vector size: ", len(fib.getCurrentSignalAt(i))
+            # print "vector size: ", len(fib.getCurrentSignalAt(i))
             self.addVoltFromPoint(fib_vec_points[i], fib.getCurrentSignalAt(i))
 
 

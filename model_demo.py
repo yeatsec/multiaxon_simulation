@@ -6,8 +6,8 @@ from matplotlib import pyplot as plt
 
 
 resistance = (300.0 * 10000.0) # ohm * um
-h.celsius = 6.3
-h.tstop = 20
+h.celsius = 15  #6.3
+h.tstop = 15
 dt = 0.025
 timesteps = int(h.tstop/dt)
 duration = h.tstop
@@ -15,20 +15,21 @@ m_r.init_model(h.tstop, dt, resistance) # ensure that the fiber resources have t
 
 print "model demo timesteps: ", timesteps
 
-pop_filename = "output2_r250.csv"
+pop_filename = "single_axon.csv"
 mod_name = "apl"
 
 t_vals = np.arange(0, h.tstop, step=h.dt, dtype=float)
 
 # model parameters
-nerve_radius = 250  # um
-fiber_length = 15000
-stim_to_record = 15000
-recording_radius = 1000000000 # try whole axon
-point_for_rec = m_r.Point([0, nerve_radius + 10, stim_to_record])
-point_for_rec2 = m_r.Point([0, nerve_radius + 10, stim_to_record - 1000])
-point_of_ref = m_r.voltPoint(point_for_rec, timesteps)
-point_of_ref2 = m_r.voltPoint(point_for_rec2, timesteps)
+nerve_radius = 125  # um
+fiber_length = 12000
+stim_to_record = 10000
+recording_radius = 2000 # this gets complicated with multiple electrodes....
+section_count = 60
+n_point = m_r.Point([0, nerve_radius + 25, stim_to_record - 0])
+p_point = m_r.Point([0, nerve_radius + 25, stim_to_record - 500])
+n_ref = m_r.voltPoint(n_point, timesteps)
+p_ref = m_r.voltPoint(p_point, timesteps)
 
 # fetch and read population file
 fibers = list()
@@ -40,9 +41,10 @@ pop_file = open(pop_filename, mode='r')
 read = csv.reader(pop_file, delimiter='\t', quotechar='|')
 for row in read:
     fiber_diameters.append(float(row[0]))
+    print str(len(fiber_diameters))
     nerve_x.append(float(row[1]))
     nerve_y.append(float(row[2]))
-    fibers.append(m_r.Fiber(float(row[0]), m_r.Point([float(row[1]), float(row[2]), 0]), fiber_length, 150, stim_to_record - recording_radius, stim_to_record + recording_radius, mod_name))
+    fibers.append(m_r.Fiber(float(row[0]), m_r.Point([float(row[1]), float(row[2]), 0]), fiber_length, section_count, stim_to_record - recording_radius, stim_to_record + recording_radius, mod_name))
 pop_file.close()
 
 
@@ -58,39 +60,36 @@ h.init()
 print "running simulation"
 h.run()
 
-# # extract i_na and i_k information, sum each into single list, keep surface area in mind
-# # parallel lists of i_na, i_k, sa, points
-# fiber_i_na_vals = list()    # 3D list
-# fiber_i_k_vals = list()     # 3D
-# fiber_section_current_vals = list()
-# fiber_sa_vals = list()      # 1D
-# fiber_points_vals = list()  # 2D
-# for fiber in fibers:
-#     fiber_i_na_vals.append(fiber.get_na_vectors())
-#     fiber_i_k_vals.append(fiber.get_k_vectors())
-#     fiber_points_vals.append(fiber.get_vector_points())
-#     fiber_sa_vals.append(fiber.getSectionSA())
-# # calculate extracellular voltage due to sum of values
-# print "calculating voltage values"
-# cap_signal = [0.0] * int(h.tstop/h.dt)
-# for fiber_index in range(len(fibers)):  # iterate fibers within population
-#     for section_index in range(fibers[fiber_index].get_vector_count()):  # iterate sections within fiber
-#         section_point = fiber_points_vals[fiber_index][section_index]
-#         r = section_point.getDist(point_of_ref)
-#         for dt_index in range(int(h.tstop/h.dt)):   # iterate time values within section var
-#             cap_signal[dt_index] += fiber_sa_vals[fiber_index] * (fiber_i_na_vals[fiber_index][section_index][dt_index] + fiber_i_k_vals[fiber_index][section_index][dt_index]) * resistance / (4 * np.pi * r)
-
 for fib in fibers:
-    point_of_ref.addVoltFromFiber(fib)
-    point_of_ref2.addVoltFromFiber(fib)
+    n_ref.addVoltFromFiber(fib)
+    p_ref.addVoltFromFiber(fib)
 
 volt_signal = list()
-p_signal = point_of_ref2.getSignal()
-n_signal = point_of_ref.getSignal()
+p_signal = p_ref.getSignal()
+n_signal = n_ref.getSignal()
+
 for i in range(timesteps):
     volt_signal.append(p_signal[i]-n_signal[i])
+
+
+file = open("last_run.csv", 'w')
+w = csv.writer(file, delimiter='\t', quotechar='|', quoting=csv.QUOTE_MINIMAL)
+
+w.writerow([str(x) for x in volt_signal])
+
+plt.figure()
+plt.plot(t_vals, p_signal)
+plt.title("(+) Terminal")
+plt.xlabel("Time (ms)")
+plt.ylabel("Voltage (mV)")
+plt.figure()
+plt.plot(t_vals, n_signal)
+plt.title("(-) Terminal")
+plt.xlabel("Time (ms)")
+plt.ylabel("Voltge (mV)")
+plt.figure()
 plt.plot(t_vals, volt_signal)
-plt.title("Extracellular Voltage due to a Compound Action Potential")
+plt.title("(+)-(-)")
 plt.xlabel("Time (ms)")
 plt.ylabel("Voltage (mV)")
 plt.show()
