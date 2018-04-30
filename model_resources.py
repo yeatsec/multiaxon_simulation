@@ -4,8 +4,8 @@ import numpy as np
 print "\n i see model_resources\n"
 
 h.tstop = 20.0
-dt = 0.025
-timesteps = int(h.tstop/dt)
+h.dt = 0.025
+timesteps = int(h.tstop/h.dt)
 duration = h.tstop
 
 resistance = 300.0 * 10000.0 # ohm * um
@@ -14,8 +14,8 @@ resistance = 300.0 * 10000.0 # ohm * um
 
 def init_model(t_stop, delta_t, resist):
     h.tstop = t_stop
-    dt = delta_t
-    timesteps = int(h.tstop/dt) 
+    h.dt = delta_t
+    timesteps = int(h.tstop/h.dt) 
     duration = h.tstop 
     resistance = resist
     print "m_r timesteps: ", timesteps

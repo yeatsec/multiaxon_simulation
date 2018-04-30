@@ -10,7 +10,7 @@ input_list = read.next()
 sim_file.close()
 
 dt = 0.025
-tstop = 15
+tstop = 20.0
 
 abs_v_signal = [abs(float(v)) for v in input_list]
 integral = 0.0
@@ -27,6 +27,6 @@ while integral >= 0:
 print str(float(i)*dt)
 
 plt.figure()
-plt.plot(np.arange(0, 15, step=dt, dtype=float), abs_v_signal)
+plt.plot(np.arange(0, tstop, step=dt, dtype=float), abs_v_signal)
 plt.show()
 

@@ -2,7 +2,7 @@ import numpy as np
 import csv
 from matplotlib import pyplot as plt
 
-filename = "apl1"
+filename = "apl4"
 
 # nerve statistics
 nerve_radius = 125 #um

@@ -6,8 +6,8 @@ from matplotlib import pyplot as plt
 
 
 resistance = (300.0 * 10000.0) # ohm * um
-h.celsius = 15  #6.3
-h.tstop = 15
+h.celsius = 25  #6.3 CHECK
+h.tstop = 20.0
 dt = 0.025
 timesteps = int(h.tstop/dt)
 duration = h.tstop
@@ -15,8 +15,9 @@ m_r.init_model(h.tstop, dt, resistance) # ensure that the fiber resources have t
 
 print "model demo timesteps: ", timesteps
 
-pop_filename = "single_axon.csv"
+pop_filename = "apl4_r125.csv" # CHECK
 mod_name = "apl"
+output_filename = "apl4_r125_25c.csv" # CHECK
 
 t_vals = np.arange(0, h.tstop, step=h.dt, dtype=float)
 
@@ -25,10 +26,9 @@ nerve_radius = 125  # um
 fiber_length = 12000
 stim_to_record = 10000
 recording_radius = 2000 # this gets complicated with multiple electrodes....
-section_count = 60
-n_point = m_r.Point([0, nerve_radius + 25, stim_to_record - 0])
-p_point = m_r.Point([0, nerve_radius + 25, stim_to_record - 500])
-n_ref = m_r.voltPoint(n_point, timesteps)
+section_count = 30
+#bipol_width = 2000
+p_point = m_r.Point([0, nerve_radius + 200, stim_to_record])
 p_ref = m_r.voltPoint(p_point, timesteps)
 
 # fetch and read population file
@@ -49,7 +49,7 @@ pop_file.close()
 
 
 plt.scatter(nerve_x, nerve_y, s=[np.pi*((diam/2)**2) for diam in fiber_diameters], c='b', alpha=0.3)
-plt.show()
+# plt.show()
 print "population size: ", len(fibers)
 # package fibers, activation, recording
 
@@ -61,35 +61,25 @@ print "running simulation"
 h.run()
 
 for fib in fibers:
-    n_ref.addVoltFromFiber(fib)
     p_ref.addVoltFromFiber(fib)
 
-volt_signal = list()
 p_signal = p_ref.getSignal()
-n_signal = n_ref.getSignal()
 
-for i in range(timesteps):
-    volt_signal.append(p_signal[i]-n_signal[i])
+# for i in range(timesteps):
+#     volt_signal.append(p_signal[i]-n_signal[i])
 
 
-file = open("last_run.csv", 'w')
+file = open(output_filename, 'w')
 w = csv.writer(file, delimiter='\t', quotechar='|', quoting=csv.QUOTE_MINIMAL)
 
-w.writerow([str(x) for x in volt_signal])
+w.writerow([str(x) for x in p_signal])
+
+file.close()
+print "file saved\n"
 
 plt.figure()
 plt.plot(t_vals, p_signal)
 plt.title("(+) Terminal")
-plt.xlabel("Time (ms)")
-plt.ylabel("Voltage (mV)")
-plt.figure()
-plt.plot(t_vals, n_signal)
-plt.title("(-) Terminal")
-plt.xlabel("Time (ms)")
-plt.ylabel("Voltge (mV)")
-plt.figure()
-plt.plot(t_vals, volt_signal)
-plt.title("(+)-(-)")
 plt.xlabel("Time (ms)")
 plt.ylabel("Voltage (mV)")
 plt.show()
