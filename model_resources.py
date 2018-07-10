@@ -23,16 +23,17 @@ def init_model(t_stop, delta_t, resist):
 def rModel(distance): # returns scalar that should be multiplied by a current value
     return resistance / (4 * np.pi * distance)
 
-
 class Fiber:
     """This object will package all of the
     data and relevant operations on 
     unmyelinated axons"""
 
-    def __init__(self, diameter, location, length, section_count, record_begin, record_end, mod_name):
+    def __init__(self, diameter, location, length, section_count, record_begin, record_end, mod_name, temp_time):
         self.diam = diameter
         self.loc = location 
         self.l = length
+        self.temp_time = temp_time
+        self.tstep = 0
         self.section_count = section_count 
         self.section_length = (length/section_count)
         self.section_sa = np.pi * self.diam * self.section_length / ((10000)**2)    # /cm2
@@ -103,6 +104,12 @@ class Fiber:
             current_signal[i] = self.section_sa * (na_cur_signal[i] + k_cur_signal[i])
         return current_signal
 
+    def updateTempTime(self):
+        for section_index in range(self.section_count):
+            self.sections[section_index](0.5).apl.localtemp = self.temp_time[section_index][self.tstep]
+        self.tstep = self.tstep + 1
+    
+
 class Point:
     """This object packages 3D location info"""
 
@@ -142,12 +149,13 @@ class voltPoint:
     def addVoltFromPoint(self, srcPoint, srcSignal):
         sigLength = len(srcSignal) - 1 # vectors seem to have an extra empty value at end
         dist = self.loc.getDist(srcPoint)
+        resist = rModel(dist)
         for index in range(sigLength):
-            self.addSignalAt(index, srcSignal[index]*rModel(dist))
+            self.addSignalAt(index, srcSignal[index]*resist)
 
     def addVoltFromFiber(self, fib):
         fib_vec_points = fib.get_vector_points()
-        for i in range(len(fib.get_vector_points())):
+        for i in range(len(fib_vec_points)):
             # print "vector size: ", len(fib.getCurrentSignalAt(i))
             self.addVoltFromPoint(fib_vec_points[i], fib.getCurrentSignalAt(i))
 
@@ -159,12 +167,13 @@ class voltCuff:
     def __init__(self, centerPoint, sigSize, radius, numPoints):
         self.rec_points = list()
         self.sigSize = sigSize
-        terminal = voltPoint(centerPoint, sigSize)
-        radians = np.linspace(0, 2*np.pi, numpoints, endpoint=False)
+        self.terminal = voltPoint(centerPoint, sigSize)
+        self.numPoints = numPoints
+        radians = np.linspace(0, 2*np.pi, numPoints, endpoint=False)
         for rad in radians: # arrange voltage points in circle
             self.rec_points.append(voltPoint([radius*np.cos(rad) + centerPoint.getLoc()[0], 
                 radius*np.sin(rad) + centerPoint.getLoc()[1],
-                centerPoint.getLoc()[2]]))
+                centerPoint.getLoc()[2]], self.sigSize))
 
     def calculateSignal(self):
         self.terminal.clearSignal()
@@ -175,7 +184,7 @@ class voltCuff:
 
 
     def getSignal(self):
-        return terminal.getSignal()
+        return self.terminal.getSignal()
             
 
     def addVoltFromSrc(self, srcPoint, srcSignal):

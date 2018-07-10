@@ -1,6 +1,7 @@
 TITLE apl.mod   aplysia californica sodium, potassium, and leak channels
  
 COMMENT
+https://www.neuron.yale.edu/phpBB/viewtopic.php?t=2107
  This is the original Hodgkin-Huxley treatment for the set of sodium, 
   potassium, and leakage channels found in the squid giant axon membrane.
   ("A quantitative description of membrane current and its application 
@@ -25,7 +26,7 @@ NEURON {
         USEION na READ ena WRITE ina
         USEION k READ ek WRITE ik
         NONSPECIFIC_CURRENT il
-        RANGE gnabar, gkbar, gl, el, gna, gk
+        RANGE gnabar, gkbar, gl, el, gna, gk, localtemp
         GLOBAL minf, hinf, ninf, mtau, htau, ntau
 	THREADSAFE : assigned GLOBALs will be per thread
 }
@@ -43,7 +44,7 @@ STATE {
  
 ASSIGNED {
         v (mV)
-        celsius (degC)
+        localtemp (degC)
         ena (mV)
         ek (mV)
 
@@ -89,10 +90,10 @@ DERIVATIVE states {
 PROCEDURE rates(v(mV)) {  :Computes rate and other constants at current v.
                       :Call once from HOC to initialize inf at resting v.
         LOCAL  alpha, beta, sum, q10
-        TABLE minf, mtau, hinf, htau, ninf, ntau DEPEND celsius FROM -100 TO 100 WITH 200
+        TABLE minf, mtau, hinf, htau, ninf, ntau DEPEND localtemp FROM -100 TO 100 WITH 200
 
 UNITSOFF
-        q10 = 3^((celsius - 6.3)/10)
+        q10 = 3^((localtemp - 6.3)/10)
                 :"m" sodium activation system
         alpha = .1 * vtrap(-(v+40),10)
         beta =  4 * exp(-(v+65)/18)

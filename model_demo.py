@@ -28,7 +28,7 @@ stim_to_record = 10000
 recording_radius = 2000 # this gets complicated with multiple electrodes....
 section_count = 30
 #bipol_width = 2000
-p_point = m_r.Point([0, nerve_radius + 200, stim_to_record])
+p_point = m_r.Point([0, nerve_radius + 5, stim_to_record])
 p_ref = m_r.voltPoint(p_point, timesteps)
 
 # fetch and read population file
@@ -37,6 +37,8 @@ fiber_diameters = list()
 nerve_x = list()
 nerve_y = list()
 
+temperatures = section_count * [timesteps * [45]]
+
 pop_file = open(pop_filename, mode='r')
 read = csv.reader(pop_file, delimiter='\t', quotechar='|')
 for row in read:
@@ -44,7 +46,7 @@ for row in read:
     print str(len(fiber_diameters))
     nerve_x.append(float(row[1]))
     nerve_y.append(float(row[2]))
-    fibers.append(m_r.Fiber(float(row[0]), m_r.Point([float(row[1]), float(row[2]), 0]), fiber_length, section_count, stim_to_record - recording_radius, stim_to_record + recording_radius, mod_name))
+    fibers.append(m_r.Fiber(float(row[0]), m_r.Point([float(row[1]), float(row[2]), 0]), fiber_length, section_count, stim_to_record - recording_radius, stim_to_record + recording_radius, mod_name, temperatures))
 pop_file.close()
 
 
@@ -58,7 +60,12 @@ h.finitialize(-80.0)
 h.fcurrent()
 h.init()
 print "running simulation"
-h.run()
+for tstep in range(timesteps):
+    print "current time step: ", str(tstep + 1), " of ", str(timesteps)
+    for fib in fibers:
+        fib.updateTempTime()
+    h.fadvance()
+
 
 for fib in fibers:
     p_ref.addVoltFromFiber(fib)
