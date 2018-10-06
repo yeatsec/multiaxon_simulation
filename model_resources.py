@@ -1,23 +1,41 @@
 from neuron import h
 import numpy as np
+import csv
 
 print "\n i see model_resources\n"
 
 h.tstop = 20.0
 h.dt = 0.025
 timesteps = int(h.tstop/h.dt)
+timevec = h.Vector(np.arange(0, h.tstop, h.dt, dtype=float))
+uniform_tempvecs = None
 duration = h.tstop
-
 resistance = 300.0 * 10000.0 # ohm * um
-
 # ^^ these are redeclared eventually 
 
-def init_model(t_stop, delta_t, resist):
+cm = 0.9 * 10**(-14) # F / um2   https://www.ncbi.nlm.nih.gov/pmc/articles/PMC1300935/
+threshold_v = 30.0
+
+
+def init_model(t_stop, delta_t, resist, uniformTempVecs=None):
+    """
+    Initializes the Model with parameters
+    @param t_stop stop time of simulation
+    @param delta_t dt for the simulation
+    @param resist bulk resistance of the medium
+    @uniformTempVec h.Vector(...) used to specify temperature in block simulations
+    """
     h.tstop = t_stop
     h.dt = delta_t
     timesteps = int(h.tstop/h.dt) 
+    timevec = h.Vector(np.arange(0, h.tstop, h.dt, dtype=float))
     duration = h.tstop 
     resistance = resist
+    if uniformTempVecs is not None:
+        print "\nuniformTempVecs is not None\n"
+        uniform_tempvecs = list()
+        for section_tempVec in uniformTempVecs:
+            uniform_tempvecs.append(h.Vector(section_tempVec)) # section_tempVec is python list
     print "m_r timesteps: ", timesteps
 
 def rModel(distance): # returns scalar that should be multiplied by a current value
@@ -28,11 +46,16 @@ class Fiber:
     data and relevant operations on 
     unmyelinated axons"""
 
-    def __init__(self, diameter, location, length, section_count, record_begin, record_end, mod_name, temp_time):
+    def __init__(self, diameter, location, length, section_count, record_begin, record_end, mod_name, temp_time=None):
         self.diam = diameter
         self.loc = location 
         self.l = length
-        self.temp_time = temp_time
+        self.temp_time_vecs = list()
+        if temp_time is not None:
+            for tval_arr in temp_time:
+                self.temp_time_vecs.append(h.Vector(tval_arr))
+        else:
+            self.temp_time_vecs = None
         self.tstep = 0
         self.section_count = section_count 
         self.section_length = (length/section_count)
@@ -42,6 +65,7 @@ class Fiber:
         self.points = list()    # parallel list of points
         self.na_vectors = list()
         self.k_vectors = list()
+        self.v_vectors = list()
         self.vector_points = list()
         self.vector_count = 0
         for section in range(section_count):
@@ -50,7 +74,10 @@ class Fiber:
             self.sections[section].diam = self.diam
             self.sections[section].nseg = 1
             self.sections[section].insert(mod_name)
-            # self.sections[section].insert('pas')
+            if self.temp_time_vecs is not None:
+                self.temp_time_vecs[section].play(self.sections[section](0.5)._ref_localtemp_apl, timevec)
+            else:
+                uniform_tempvecs[section].play(self.sections[section](0.5)._ref_localtemp_apl, timevec)
             self.sections[section].L = self.section_length
             if self.points[section].getLoc()[2] >= record_begin and self.points[section].getLoc()[2] <= record_end:
                 # section is within recording area
@@ -58,13 +85,15 @@ class Fiber:
                 self.na_vectors[-1].record(self.sections[section](0.5)._ref_ina) # accesses last element of list
                 self.k_vectors.append(h.Vector(timesteps))
                 self.k_vectors[-1].record(self.sections[section](0.5)._ref_ik)
+                self.v_vectors.append(h.Vector(timesteps))
+                self.v_vectors[-1].record(self.sections[section](0.5)._ref_v)
                 self.vector_points.append(self.points[section])
                 self.vector_count += 1
 
             if section > 0: # connect section to previous section
                 self.sections[section].connect(self.sections[section-1])
         self.stim = h.IClamp(0.5, sec=self.sections[5])
-        self.stim.amp = 20.0
+        self.stim.amp = 200.0
         self.stim.delay = 0.0
         self.stim.dur = 0.5
 
@@ -98,16 +127,22 @@ class Fiber:
     def getCurrentSignalAt(self, index): # returns current signal for section at given index
         na_cur_signal = self.na_vectors[index]
         k_cur_signal = self.k_vectors[index]
+        cm_v_signal = self.v_vectors[index]
         sig_len = len(na_cur_signal)
         current_signal = [0.0] * sig_len
-        for i in range(sig_len):
-            current_signal[i] = self.section_sa * (na_cur_signal[i] + k_cur_signal[i])
+        current_signal[0] = self.section_sa * (na_cur_signal[0] + k_cur_signal[0]) * -1
+        for i in range(1, sig_len):
+            current_signal[i] = self.section_sa * (na_cur_signal[i] + k_cur_signal[i] + cm * (cm_v_signal[i] - cm_v_signal[i-1])) * -1
         return current_signal
 
-    def updateTempTime(self):
-        for section_index in range(self.section_count):
-            self.sections[section_index](0.5).apl.localtemp = self.temp_time[section_index][self.tstep]
-        self.tstep = self.tstep + 1
+    # def updateTempTime(self):
+    #     for section_index in range(self.section_count):
+    #         self.sections[section_index](0.5).apl.localtemp = self.temp_time[section_index][self.tstep]
+    #     self.tstep = self.tstep + 1
+
+    def apDetect(self):
+        return (max(self.v_vectors[-1]) > threshold_v)
+
     
 
 class Point:
@@ -186,7 +221,6 @@ class voltCuff:
     def getSignal(self):
         return self.terminal.getSignal()
             
-
     def addVoltFromSrc(self, srcPoint, srcSignal):
         # incorporate resistive model here
         for rPoint in self.rec_points:
