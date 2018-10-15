@@ -5,8 +5,8 @@ from matplotlib import pyplot as plt
 filename = "apl4"
 
 # nerve statistics
-nerve_radius = 125 #um
-fiber_density = 1.0/35.37 # fibers/um2
+nerve_radius = 150 #um
+fiber_density = 1.0/50.96 # fibers/um2 #35.37
 
 def lpac_diam():
 	fib_t = np.random.uniform()
@@ -17,7 +17,7 @@ def lpac_diam():
 	else:
 		return np.random.uniform(low=10.0, high=25.0)
 
-pop_file = open(filename+"_r"+str(nerve_radius)+".csv", 'w')
+pop_file = open(filename+"_r"+str(nerve_radius)+".csv", 'wb')
 
 fiber_diameters = list()
 

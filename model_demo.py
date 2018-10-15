@@ -4,6 +4,7 @@ import model_resources as m_r
 import numpy as np
 from matplotlib import pyplot as plt 
 import io_resources as io_r
+from scipy.interpolate import griddata
 
 # NEURON/physical parameters
 resistance = (300.0 * 10000.0) # ohm * um
@@ -15,27 +16,34 @@ duration = h.tstop
 
 print "model demo timesteps: ", timesteps
 
-pop_file = "fit0_r125" # no file extension
+pop_file = "uni24_r150" # no file extension
 pop_path = "./populations/" + pop_file + ".csv" # CHECK
 mod_name = "apl"
 
+tempfilename = "SingleFiberInContact_Eric_BMES_5sec_41_7mW_200Hz_200us.txt"
+
 t_vals = np.arange(0.0, h.tstop, step=h.dt, dtype=float)
 
+use_temp_dist = True
+
 # model parameters
-nerve_radius = 125  # um
-fiber_length = 6000.0
-stim_to_record = 4000.0
+nerve_radius = 150  # um
+fiber_length = 7000.0
+stim_to_record = 5000.0
 recording_radius = 2000.0 # this gets complicated with multiple electrodes....
+scale_temp = 0.95
 block_temp = 35.0
 block_location = 2000.0 # um
-block_length = 150.0 # um
+block_length = 3000.0 # um
 
 output_filename = pop_file + "_" + str(int(block_length)) + "_" + str(int(block_temp)) + "_cap.csv" # CHECK
 stat_out_filename = pop_file + "_" + str(int(block_length)) + "_" + str(int(block_temp)) + "_stat.csv"
-
+if use_temp_dist:
+    output_filename = pop_file + "_" + str(int(block_length))+ "_"+ str(int(scale_temp*100)) +"_tempdataxz_cap.csv"
+    stat_out_filename = pop_file + "_" + str(int(block_length))+ "_" + str(int(scale_temp*100)) + "_tempdataxz_stat.csv"
 block_length/=2
 
-section_count = 60
+section_count = 70
 section_length = float(fiber_length)/float(section_count)
 #bipol_width = 2000
 p_point = m_r.Point([0, nerve_radius + 5, stim_to_record])
@@ -47,21 +55,30 @@ fiber_diameters = list()
 nerve_x = list()
 nerve_y = list()
 
-temperatures = section_count * [timesteps * [block_temp]] # create list of list of temps at timesteps for each section; apply same to all axons
-
 print "block_length is set to: ", block_length
 
-# overwrite sections in block radius with block temp
+# forward declarations
 temperatures = list()
-for sec_num in range(section_count):
-    sec_center = sec_num * section_length + (section_length/2)
-    if (sec_center >= block_location - block_length and sec_center <= block_location + block_length): # within blocking area
-        temperatures.append(timesteps * [block_temp]) # set temps at this location for all time_val to block_temp
-        print "setting temp at length ", sec_center
-    else:
-        temperatures.append(timesteps * [6.3])
-
-m_r.init_model(h.tstop, dt, resistance, uniformTempVecs=temperatures) # ensure that the fiber resources have the same time dimensions
+fiber_temps = list()
+headers = list()
+points = list()
+temps = list()
+if use_temp_dist:
+    # load in temperature data
+    reader = io_r.tempReader(tempfilename, splitstring=' ')
+    headers, points, temps = reader.tempdistread(pointscale=1000.0, tempscale=scale_temp, x=3000, y=0, z=650, swapxz=True)
+    reader.tempreader_close()
+    points, temps = np.array(points), np.array(temps)
+    m_r.init_model(h.tstop, dt, resistance)
+else:
+    for sec_num in range(section_count):
+        sec_center = sec_num * section_length + (section_length/2)
+        if (sec_center >= block_location - block_length and sec_center <= block_location + block_length): # within blocking area
+            temperatures.append(timesteps * [block_temp]) # set temps at this location for all time_val to block_temp
+            print "setting temp at length ", sec_center
+        else:
+            temperatures.append(timesteps * [6.3])
+    m_r.init_model(h.tstop, dt, resistance, uniformTempVecs=temperatures) # ensure that the fiber resources have the same time dimensions
 
 
 pop_file = open(pop_path, mode='r')
@@ -72,7 +89,21 @@ for row in read:
         print str(len(fiber_diameters))
     nerve_x.append(float(row[1]))
     nerve_y.append(float(row[2]))
-    fibers.append(m_r.Fiber(float(row[0]), m_r.Point([float(row[1]), float(row[2]), 0]), fiber_length, section_count, stim_to_record - recording_radius, stim_to_record + recording_radius, mod_name, temperatures))
+    if use_temp_dist:
+        print "interpolating for fiber ", len(fiber_diameters)
+        sec_locs = m_r.getSecLocs(section_count, section_length)
+        sec_points = list()
+        for loc in sec_locs:
+            sec_points.append([float(row[1]), float(row[2]), float(loc)])
+        temperatures = griddata(points, temps, sec_points, method='nearest', fill_value=6.3)
+        temp_temps = list()
+        for i, temp_val in enumerate(temperatures):
+            if sec_locs[i] >= block_location - block_length and sec_locs[i] <= block_location + block_length:
+                temp_temps.append(timesteps * [temp_val])
+            else:
+                temp_temps.append(timesteps * [6.3])
+        temperatures = temp_temps
+    fibers.append(m_r.Fiber(float(row[0]), m_r.Point([float(row[1]), float(row[2]), 0]), fiber_length, section_count, stim_to_record - recording_radius, stim_to_record + recording_radius, mod_name, temp_time=temperatures))
 pop_file.close()
 
 

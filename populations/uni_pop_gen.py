@@ -4,19 +4,19 @@ from matplotlib import pyplot as plt
 from scipy.stats import norm
 import math
 
-filename = "fit2"
+filename = "uni"
 
 # nerve statistics
 nerve_radius = 150 #um
-fiber_density = 1.0/50.96 # fibers/um2
+fiber_density = 1.0/50.96 # fibers/um2 #35.37
 
 # population modeling statistics (normal model underlaying lognormal)
-mu = 0.63 # um
-sd = 0.81 # um
+diam = 24.0
+
+filename = filename + str(int(diam))
 
 def lpac_diam():
-	fib_t = np.random.uniform()
-	return math.exp(norm.ppf(fib_t, loc=mu, scale=sd))
+	return diam
 
 pop_file = open(filename+"_r"+str(nerve_radius)+".csv", 'wb')
 

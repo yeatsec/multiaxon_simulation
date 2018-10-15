@@ -41,6 +41,12 @@ def init_model(t_stop, delta_t, resist, uniformTempVecs=None):
 def rModel(distance): # returns scalar that should be multiplied by a current value
     return resistance / (4 * np.pi * distance)
 
+def getSecLocs(section_count, section_length):
+    locs = list()
+    for sec in range(section_count):
+        locs.append(sec*section_length + section_length/2)
+    return locs
+
 class Fiber:
     """This object will package all of the
     data and relevant operations on 
