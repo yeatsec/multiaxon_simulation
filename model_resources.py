@@ -1,4 +1,4 @@
-from neuron import h
+from neuron import h, gui
 import numpy as np
 import csv
 
@@ -81,9 +81,9 @@ class Fiber:
             self.sections[section].nseg = 1
             self.sections[section].insert(mod_name)
             if self.temp_time_vecs is not None:
-                self.temp_time_vecs[section].play(self.sections[section](0.5)._ref_localtemp_apl, timevec)
+                self.temp_time_vecs[section].play(self.sections[section](0.5)._ref_localtemp_hhlt, timevec)
             else:
-                uniform_tempvecs[section].play(self.sections[section](0.5)._ref_localtemp_apl, timevec)
+                uniform_tempvecs[section].play(self.sections[section](0.5)._ref_localtemp_hhlt, timevec)
             self.sections[section].L = self.section_length
             if self.points[section].getLoc()[2] >= record_begin and self.points[section].getLoc()[2] <= record_end:
                 # section is within recording area
@@ -98,10 +98,10 @@ class Fiber:
 
             if section > 0: # connect section to previous section
                 self.sections[section].connect(self.sections[section-1])
-        self.stim = h.IClamp(0.5, sec=self.sections[5])
+        self.stim = h.IClamp(0.5, sec=self.sections[2])
         self.stim.amp = 200.0
         self.stim.delay = 0.0
-        self.stim.dur = 0.5
+        self.stim.dur = 0.25
 
     def getLoc(self):
         return self.loc

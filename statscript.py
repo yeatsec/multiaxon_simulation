@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 
 dpi_spec = 600
 
-statname = "fit2_r150_3000_80_tempdataxz_stat"
+statname = "uni14_r150_3000_100_tempdataxz_stat"
 statfile = statname + ".csv"
 bins = np.arange(0, 25, step=0.5, dtype=float)
 crosssection_size = (8,8)
@@ -32,7 +32,10 @@ plt.savefig(statname + "_stackedhist.png", dpi=dpi_spec)
 
 plt.figure()
 plt.hist(list(map(lambda x: float(x[1]), noaplist)), bins=bins, color='gray')
-
+print "\nBins: "
+print bins2
+print "\nFreq: "
+print napb
 plt.savefig(statname+ "_grayhist.png", dpi=dpi_spec)
 
 plt.figure(figsize=crosssection_size)

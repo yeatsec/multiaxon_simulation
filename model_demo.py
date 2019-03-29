@@ -9,6 +9,7 @@ from scipy.interpolate import griddata
 # NEURON/physical parameters
 resistance = (300.0 * 10000.0) # ohm * um
 # h.celsius = 6.3  #6.3 CHECK
+default_temp = 20.0
 h.tstop = 15.0
 dt = 0.025
 timesteps = int(h.tstop/dt)
@@ -18,7 +19,7 @@ print "model demo timesteps: ", timesteps
 
 pop_file = "uni24_r150" # no file extension
 pop_path = "./populations/" + pop_file + ".csv" # CHECK
-mod_name = "apl"
+mod_name = "hhlt"
 
 tempfilename = "SingleFiberInContact_Eric_BMES_5sec_41_7mW_200Hz_200us.txt"
 
@@ -31,7 +32,7 @@ nerve_radius = 150  # um
 fiber_length = 7000.0
 stim_to_record = 5000.0
 recording_radius = 2000.0 # this gets complicated with multiple electrodes....
-scale_temp = 0.95
+scale_temp = 1.00
 block_temp = 35.0
 block_location = 2000.0 # um
 block_length = 3000.0 # um
@@ -77,9 +78,11 @@ else:
             temperatures.append(timesteps * [block_temp]) # set temps at this location for all time_val to block_temp
             print "setting temp at length ", sec_center
         else:
-            temperatures.append(timesteps * [6.3])
+            temperatures.append(timesteps * [default_temp])
     m_r.init_model(h.tstop, dt, resistance, uniformTempVecs=temperatures) # ensure that the fiber resources have the same time dimensions
 
+if use_temp_dist:
+    default_temp = np.amin(temps)
 
 pop_file = open(pop_path, mode='r')
 read = csv.reader(pop_file, delimiter='\t', quotechar='|')
@@ -95,13 +98,13 @@ for row in read:
         sec_points = list()
         for loc in sec_locs:
             sec_points.append([float(row[1]), float(row[2]), float(loc)])
-        temperatures = griddata(points, temps, sec_points, method='nearest', fill_value=6.3)
+        temperatures = griddata(points, temps, sec_points, method='nearest', fill_value=default_temp)
         temp_temps = list()
         for i, temp_val in enumerate(temperatures):
             if sec_locs[i] >= block_location - block_length and sec_locs[i] <= block_location + block_length:
                 temp_temps.append(timesteps * [temp_val])
             else:
-                temp_temps.append(timesteps * [6.3])
+                temp_temps.append(timesteps * [default_temp])
         temperatures = temp_temps
     fibers.append(m_r.Fiber(float(row[0]), m_r.Point([float(row[1]), float(row[2]), 0]), fiber_length, section_count, stim_to_record - recording_radius, stim_to_record + recording_radius, mod_name, temp_time=temperatures))
 pop_file.close()
