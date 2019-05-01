@@ -67,7 +67,7 @@ temps = list()
 if use_temp_dist:
     # load in temperature data
     reader = io_r.tempReader(tempfilename, splitstring=' ')
-    headers, points, temps = reader.tempdistread(pointscale=1000.0, tempscale=scale_temp, x=3000, y=0, z=650, swapxz=True)
+    headers, points, temps = reader.tempdistread(pointscale=1000.0, tempscale=scale_temp, x=block_location, y=0, z=650, swapxz=True)
     reader.tempreader_close()
     points, temps = np.array(points), np.array(temps)
     m_r.init_model(h.tstop, dt, resistance)

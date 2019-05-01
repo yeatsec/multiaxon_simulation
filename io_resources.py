@@ -67,7 +67,7 @@ class tempReader:
             temps.append((float(line[3])-273.15))
         tempmin = min(temps)
         for i, temp in enumerate(temps):
-            temps[i] = (temp-tempmin)*tempscale + tempmin # scale the gradient, not the whole dist
+            temps[i] = ((temp-tempmin)*tempscale) + tempmin # scale the gradient, not the whole dist
         return headers, points, temps
 
     def tempreader_close(self):

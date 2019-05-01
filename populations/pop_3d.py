@@ -3,13 +3,13 @@ import matplotlib.pyplot as plt
 import csv
 from mpl_toolkits.mplot3d import Axes3D
 
-filename = "output2_r250.csv"
-nseg = 100
-fiber_len = 15000
-nerve_radius = 250
-stim_to_record = 10000
+filename = "fit2_r150.csv"
+nseg = 300
+fiber_len = 30000
+nerve_radius = 300
+stim_to_record = 28000
 
-point_of_ref = [0, nerve_radius + 10, stim_to_record]
+point_of_ref = [0, nerve_radius + 3000, stim_to_record]
 
 # fetch and read population file
 fiber_diameters = list()

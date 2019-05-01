@@ -5,17 +5,17 @@ import matplotlib.pyplot as plt
 
 # have a list of filenames
 
-#cap_filenames = ["fit2_r150_0_35_cap.csv", "fit2_r150_300_35_cap.csv", "fit2_r150_600_35_cap.csv", "fit2_r150_1200_35_cap.csv"]#
-cap_filenames = ["fit2_r150_0_35_cap.csv", "fit2_r150_3000_90_tempdataxz_cap.csv", "fit2_r150_3000_95_tempdataxz_cap.csv", "fit2_r150_3000_100_tempdataxz_cap.csv"]
-levels = [0, 80, 85, 90, 95, 100]
-colors = ['k', 'b', 'g', 'r', 'y']
-labels = ['No Heat Distribution', '38.76 $^\circ$C', '39.80 $^\circ$C', '40.84 $^\circ$C']
-y_lims = (-4.0, 6.0)
-timesteps = np.arange(0, 15, 0.025, dtype=float)
+levels = np.arange(0.70, 1.20, 0.10, float)
+levels[0] = 0.0
+cap_filenames = ["fit2_r150_" + str(int((x+0.001)*100)) + "_tempdataxz" for x in levels]
+colors = ['k', 'b', 'g', 'r', 'c']#, 'y']
+labels = ['Peak Temp ' + str(round(lvl*20.84, 1) + 20) + 'C' for lvl in levels]
+y_lims = None # (-0.5, 0.5)
+timesteps = np.arange(0, 40, 0.025, dtype=float) # CHECK TSTO)P
 
 caps = list()
 for fi, fname in enumerate(cap_filenames):
-    capreader = io_r.FileReader(fname)
+    capreader = io_r.FileReader(fname+'_cap.csv')
     caps.append(list(map(lambda x: float(x[0]),capreader.filereader_read())))
     capreader.filereader_close()
 
@@ -23,8 +23,46 @@ for fi, fname in enumerate(cap_filenames):
 # display CAPs
 plt.figure()
 for ci, cap in enumerate(caps):
-    plt.plot(timesteps, cap, linewidth=3, color=colors[ci], label=labels[ci])
+    plt.plot(timesteps, cap, linewidth=2, color=colors[ci%len(colors)], label=labels[ci])
 plt.ylim(y_lims)
 plt.legend()
 plt.savefig("combined_cap2.png", dpi=600)
 plt.show()
+
+aocs = list()
+
+for ci, cap in enumerate(caps):
+    aocs.append(sum(np.abs(cap))*0.025)
+
+# read in the inhibition information
+inhibs = list()
+actives = list()
+for fi, fname in enumerate(cap_filenames):
+    actreader = io_r.FileReader(fname + '_stat.csv')
+    unproc = list(map(lambda x: float(x[0]), actreader.filereader_read()))
+    active = 0
+    inhib = 0
+    
+    for x in unproc:
+        if (int(x) == 1):
+            active += 1
+        else:
+            inhib += 1
+
+    inhibs.append(inhib)
+    actives.append(active)
+
+actprops = [float(actives[i])/(float(actives[i])+float(inhibs[i])) for i in range(len(cap_filenames))]
+aocmax = max(aocs)
+actmax = max(actprops)
+
+normaocs = [aoc/aocmax for aoc in aocs]
+normacts = [act/actmax for act in actprops]
+
+plt.figure()
+plt.scatter(normaocs, normacts)
+plt.show()
+
+print aocs
+
+

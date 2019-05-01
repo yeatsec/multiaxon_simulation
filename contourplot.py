@@ -19,11 +19,11 @@ for i in range(1377):
     diam_y.append(0.0)
     diam_inhib.append(0.0)
 
-xcoor = np.arange( -150,150, dxy, dtype=float)
-ycoor = np.arange(-150, 150, dxy, dtype=float)
+xcoor = np.arange( -300,300, dxy, dtype=float)
+ycoor = np.arange(-300, 300, dxy, dtype=float)
 
 for diam in diameters:
-    r = io_r.FileReader("uni"+str(diam)+"_r150_3000_100_tempdataxz_stat.csv")
+    r = io_r.FileReader("uni"+str(diam)+"_r150_114_tempdataxz_stat.csv")
     statlist = r.filereader_read()
     r.filereader_close()
     for i in range(len(statlist)):
@@ -38,7 +38,7 @@ interp = list()
 for x in xcoor:
     for y in ycoor:
         interp.append((x, y))
-inhibgrid = griddata(np.array(diam_points), np.array(diam_inhib), interp, method='nearest')
+inhibgrid = griddata(np.array(diam_points), np.array(diam_inhib), interp, method='cubic')
 
 inhibgrid = np.reshape(inhibgrid[:len(xcoor)*len(ycoor)], (len(ycoor), len(xcoor)))
 print inhibgrid.shape
@@ -46,13 +46,13 @@ print inhibgrid.shape
 # zero out the periphery
 for row in range(inhibgrid.shape[0]):
         for col in range(inhibgrid.shape[1]):
-                if ((row-150)**2+(col-150)**2 > 150**2):
+                if ((row-300)**2+(col-300)**2 >= 155.**2):
                         inhibgrid[row][col] = np.nan
 
 
 plt.figure()
 ax = plt.gca()
-cs = plt.contourf(xcoor, ycoor, inhibgrid, cmap='YlOrRd', vmin = 0, vmax = 24)
+cs = plt.pcolor(xcoor, ycoor, inhibgrid, cmap='YlOrRd', vmin = 0, vmax = 26)
 plt.colorbar(cs, ax=ax)
 plt.savefig("inhib_scatter.png", dpi=dpi_spec)
 # plt.figure()

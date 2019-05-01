@@ -72,6 +72,8 @@ class Fiber:
         self.na_vectors = list()
         self.k_vectors = list()
         self.v_vectors = list()
+        self.i_cap_vectors = list()
+        self.il_hh_vectors = list()
         self.vector_points = list()
         self.vector_count = 0
         for section in range(section_count):
@@ -93,6 +95,10 @@ class Fiber:
                 self.k_vectors[-1].record(self.sections[section](0.5)._ref_ik)
                 self.v_vectors.append(h.Vector(timesteps))
                 self.v_vectors[-1].record(self.sections[section](0.5)._ref_v)
+                self.i_cap_vectors.append(h.Vector(timesteps))
+                self.i_cap_vectors[-1].record(self.sections[section](0.5)._ref_i_cap)
+                self.il_hh_vectors.append(h.Vector(timesteps))
+                self.il_hh_vectors[-1].record(self.sections[section](0.5)._ref_il_hhlt)
                 self.vector_points.append(self.points[section])
                 self.vector_count += 1
 
@@ -133,12 +139,12 @@ class Fiber:
     def getCurrentSignalAt(self, index): # returns current signal for section at given index
         na_cur_signal = self.na_vectors[index]
         k_cur_signal = self.k_vectors[index]
-        cm_v_signal = self.v_vectors[index]
+        i_cap_cur_signal = self.i_cap_vectors[index]
+        il_cur_signal = self.il_hh_vectors[index]
         sig_len = len(na_cur_signal)
         current_signal = [0.0] * sig_len
-        current_signal[0] = self.section_sa * (na_cur_signal[0] + k_cur_signal[0]) * -1
-        for i in range(1, sig_len):
-            current_signal[i] = self.section_sa * (na_cur_signal[i] + k_cur_signal[i] + cm * (cm_v_signal[i] - cm_v_signal[i-1])) * -1
+        for i in range(0, sig_len):
+            current_signal[i] = self.section_sa * (na_cur_signal[i] + k_cur_signal[i] + i_cap_cur_signal[i] + il_cur_signal[i])
         return current_signal
 
     # def updateTempTime(self):

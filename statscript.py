@@ -4,7 +4,8 @@ import matplotlib.pyplot as plt
 
 dpi_spec = 600
 
-statname = "uni14_r150_3000_100_tempdataxz_stat"
+
+statname = "fit2_r150_85_tempdataxz_stat"
 statfile = statname + ".csv"
 bins = np.arange(0, 25, step=0.5, dtype=float)
 crosssection_size = (8,8)

@@ -11,7 +11,7 @@ nerve_radius = 150 #um
 fiber_density = 1.0/50.96 # fibers/um2 #35.37
 
 # population modeling statistics (normal model underlaying lognormal)
-diam = 24.0
+diam = 20.0
 
 filename = filename + str(int(diam))
 
