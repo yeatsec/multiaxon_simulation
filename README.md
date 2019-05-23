@@ -1,4 +1,4 @@
-#User Manual for Multiaxon Simulation
+# User Manual for Multiaxon Simulation
 
 Eric Yeats
 Vanderbilt Class of 2019
@@ -7,9 +7,9 @@ eric.c.yeats@vanderbilt.edu
 
 May 23, 2019
 
-##Introduction
+## Introduction
 
-###Goals
+### Goals
 
 The goal of the simulation is:
     * to use a pdf of axon diameters to generate axons of varying diameter arranged in space in order to approximate a 3d morphology of the Left-Pleural-Abdominal-Connective (LPAC) nerve of Aplysia californica
@@ -17,7 +17,7 @@ The goal of the simulation is:
     * to excite all axons in the population proximally, record their activity as they conduct action potentials through the region of the nerve immersed in the 3d temperature distribution, and to establish which axons are still 'active' and which are completely inhibited in the distal portion (post 3d-temp distribution)
     * to calculate the resultant compound neural action potential (CNAP) recorded at an arbitrary point in 3d isotropic space with respect to the nerve
 
-###Required Tools and Intended Workflow
+### Required Tools and Intended Workflow
 
 This simulation suite is written in Python 2.7, but the core of the biophysical simulation is powered by NEURON. This means that to run this simulation, Python 2.7 must have the NEURON module installed. Additionally, the simulation suite requires that the csv, matplotlib, numpy, and scipy modules are installed.
 More detailed explanations of the scripts are provided later, but the main components of the simulation are:
@@ -29,7 +29,7 @@ More detailed explanations of the scripts are provided later, but the main compo
     * a script ('..._statcap.py') which reads a '..._tempdataxz_cap.csv' file (or multiple) and generates a plot of all CNAPs specified in the '..._tempdataxz_cap.csv' file list. the script also generates a scatterplot which compares the inhibition level of each nerve in each simulation to the Area Under the Curve measurement of the corresponding CNAP
 
 
-###Geometry
+### Geometry
 
 The geometry of the simulation is configurable, but it follows this general formula:
     * The proximal end of the nerve is centered at (0, 0, 0) (um). Imagine that the nerve is a cylinder - the central point of the circle that makes up the base of the cylinder is located at (0, 0, 0) (um). The lengthwise axis of the nerve stretches along the z axis from (0, 0, 0) to (0, 0, fiber_length) (um)
