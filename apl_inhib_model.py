@@ -22,14 +22,16 @@ mod_name = "hhlt"
 
 t_vals = np.arange(0.0, h.tstop, step = h.dt, dtype=float)
 
-# model parameters
+### nerve model parameters
 nerve_radius = 150 #um
-fiber_length = 30000 # um
-section_length = 100 # um
+fiber_length = 30000 # um, is the length of all fibers which compose the nerve, and hence the nerve length
+section_length = 100 # um, the length of each NEURON section used to compose the fiber. make sure this dividese fiber_length with an integer rersult.
 section_count = int(fiber_length/section_length)
-stim_z = 1000 # um
-record_z = 28000 # um
-recording_radius = 2000.0 # um, empirically determined (in simulation; is saturation point of recorded signal)
+stim_z = 1000 # um, the location along the length of the nerve where current is injected for axon excitation
+record_z = 28000 # um, the location along the length of the nerve where membrane current recording is **centered**
+recording_radius = 2000.0 # um, the maximum distance along the length of the nerve in the +/- z direction from which the membrane current is recorded
+# thus, the sections which contribute to the CNAP recording are at locations [:, :, record_z-recording_radius:record_z+recording_radius]
+# recording_radius empirically determined (in simulation; is saturation point of recorded signal)
 scale_temp = 0.65
 fill=None   # make sure is None if scale_temp is important
 block_location = 15000
