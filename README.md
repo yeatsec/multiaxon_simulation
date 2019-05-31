@@ -46,7 +46,7 @@ The geometry of the simulation is configurable, but it follows this general form
     
 ## Setup Manual
 
-# Preparing the NEURON Environment with Python 2.7
+### Preparing the NEURON Environment with Python 2.7
 
 The NEURON environment was acquired via the Anaconda package manager. In the future, package management with a dedicated virtual environment is recommended. The necessary python packages are:
 
@@ -58,7 +58,7 @@ The NEURON environment was acquired via the Anaconda package manager. In the fut
 
 A few custom modules were also written in order to simplify the simulation scripts and to make reuseable code for IO operations. These scripts are io_resources.py and model_resources.py, and they're included in the repository.
 
-# Compiling the NEURON NMODL File
+### Compiling the NEURON NMODL File
 
 Follow instructions online (specific to your OS) on how to compile NMODL files. NMODL files become relevant in the code in model_resources.py, where the NEURON mechanism defined by the compiled NMODL file is inserted into each section of each axon.
 
@@ -66,7 +66,7 @@ IMPORTANT: If you want to change the name of the mechanism that NEURON uses, you
 
 ## Script Manual
 
-# Generating an Axon Population: _populations/fit_pop_gen.py_
+### Generating an Axon Population: _populations/fit_pop_gen.py_
 
 This script is used to generate an evenly-spaced 2D grid of axons of varying diameter arranged in a nerve shape. The grid represents a 'cross section' of the nerve, with each of the axons in the 2D grid perpendicular to the plane of the 2D grid.
 
@@ -75,7 +75,7 @@ The axon diameter pdf is enclosed in *lpac_diam()*, a function which returns a r
 The script will generate a file of all diameters and their specific location wrt to the simulation origin. This file will need to be paired with a temperature distribution in the next step, a process in which the anticipated locations of NEURON segments, given a population, are interpolated with raw temperature distribution data.
 
 
-# Pairing an Axon Population with a Tmeperature Distribution for Simulation Prep: *gentemp.py*
+### Pairing an Axon Population with a Tmeperature Distribution for Simulation Prep: *gentemp.py*
 
 This script, given a raw temperature distribution and a population layout, produces a list of interpolated temperatures for NEURON segments associated with each axon in a population.
 
