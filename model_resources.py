@@ -13,8 +13,8 @@ duration = h.tstop
 resistance = 300.0 * 10000.0 # ohm * um
 # ^^ these are redeclared eventually 
 
-cm = 0.9 * 10**(-14) # F / um2   https://www.ncbi.nlm.nih.gov/pmc/articles/PMC1300935/
-threshold_v = 30.0
+cm = 0.9 * 10**(-14) # F / um2, is cell membrane capacitance   https://www.ncbi.nlm.nih.gov/pmc/articles/PMC1300935/
+threshold_v = 30.0 # mV, is threshold membrane potential to determine if action potential present in a membrane potential signal
 
 
 def init_model(t_stop, delta_t, resist, uniformTempVecs=None):
@@ -146,11 +146,6 @@ class Fiber:
         for i in range(0, sig_len):
             current_signal[i] = self.section_sa * (na_cur_signal[i] + k_cur_signal[i] + i_cap_cur_signal[i] + il_cur_signal[i])
         return current_signal
-
-    # def updateTempTime(self):
-    #     for section_index in range(self.section_count):
-    #         self.sections[section_index](0.5).apl.localtemp = self.temp_time[section_index][self.tstep]
-    #     self.tstep = self.tstep + 1
 
     def apDetect(self):
         return (max(self.v_vectors[-1]) > threshold_v)

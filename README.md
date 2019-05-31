@@ -1,11 +1,14 @@
 # User Manual for Multiaxon Simulation
 
 Eric Yeats
+
 Vanderbilt Class of 2019
+
 B.E. Computer Engineering with a Minor in Interdisciplinary Neuroscience
-eric.c.yeats@vanderbilt.edu
 
 May 23, 2019
+
+eric.c.yeats@vanderbilt.edu
 
 ## Introduction
 
@@ -41,3 +44,47 @@ The geometry of the simulation is configurable, but it follows this general form
 * The membrane potential of each of the axons is measured at their distal end to determine whether there is still an action potential. Simple thresholding is used to determine this. 
 * The point for which the resultant CNAP is calculated is located at (0, nerve_radius + rec_dist, record_z) (um), where nerve_radius is the radius of the cylindrical nerve model and the rec_dist is the orthogonal distance away from the nerve surface to the recording point.
     
+## Setup Manual
+
+# Preparing the NEURON Environment with Python 2.7
+
+The NEURON environment was acquired via the Anaconda package manager. In the future, package management with a dedicated virtual environment is recommended. The necessary python packages are:
+
+* neuron
+* numpy
+* scipy
+* matplotlib
+* csv (should be out-of-the-box)
+
+A few custom modules were also written in order to simplify the simulation scripts and to make reuseable code for IO operations. These scripts are io_resources.py and model_resources.py, and they're included in the repository.
+
+# Compiling the NEURON NMODL File
+
+Follow instructions online (specific to your OS) on how to compile NMODL files. NMODL files become relevant in the code in model_resources.py, where the NEURON mechanism defined by the compiled NMODL file is inserted into each section of each axon.
+
+IMPORTANT: If you want to change the name of the mechanism that NEURON uses, you must go into model_resources and change the suffix of the accessed state variables associated with the mechanism. This code can be found in model_resources.py in Fiber::init. FYI, the TITLE field of the NMODL file is what determines this suffix, not the name of the NMODL file itself. Could save you a headache down the line..
+
+## Script Manual
+
+# Generating an Axon Population: _populations/fit_pop_gen.py_
+
+This script is used to generate an evenly-spaced 2D grid of axons of varying diameter arranged in a nerve shape. The grid represents a 'cross section' of the nerve, with each of the axons in the 2D grid perpendicular to the plane of the 2D grid.
+
+The axon diameter pdf is enclosed in *lpac_diam()*, a function which returns a random sample of the pdf. The continuous pdf was fit to discrete data reported in Bedini *et al.* 2000. 
+
+The script will generate a file of all diameters and their specific location wrt to the simulation origin. This file will need to be paired with a temperature distribution in the next step, a process in which the anticipated locations of NEURON segments, given a population, are interpolated with raw temperature distribution data.
+
+
+# Pairing an Axon Population with a Tmeperature Distribution for Simulation Prep: *gentemp.py*
+
+This script, given a raw temperature distribution and a population layout, produces a list of interpolated temperatures for NEURON segments associated with each axon in a population.
+
+Important Parameters:
+* default_temp - this defines the base temperature of the fluid the nerve is immersed in
+* nerve_length - is the length of the anticipated simulated nerve, make sure this matches that in the simulation script
+* section_length - the length of each NEURON section used to compose the axons in the simulation, make sure this matches that in the simulation script. this will also determine the number of sections used to compose each axon and thus the number of temperatures interpolated from the temperature distribution for each axon
+* block_length - the length along the axon of which the NEURON sections have temperatures interpolated from the raw temperature distribution data (further explained in the 'Geometry' section). All sections located outside of the block_length assume the default_temp parameter as their temperature.
+
+This will generate a file used by the simulation itself.
+
+IMPORTANT: This script only needs to be run if the temperature distribution or the *geometry* of a simulation changes. For example, if the number of sections in each axon, the nerve length, the block length, or the spacing between axons is changed, this script needs to be re-run. The script DOES NOT need to be run if the only thing different between simulations is the diamter of each axon used to compose the nerve. The sections would all be located in the same spots wrt the temperature distribution in that case.
