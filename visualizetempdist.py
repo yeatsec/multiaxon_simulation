@@ -3,11 +3,12 @@ from scipy.interpolate import griddata
 import matplotlib.pyplot as plt
 import io_resources as io_r
 
-filename = "SingleFiberInContact_Eric_BMES_5sec_41_7mW_200Hz_200us.txt"
+filename = "newtempdist.txt"
+mirrxy = True
 # Dimensions are: []
 
 filereader = io_r.tempReader(filename, splitstring=' ')
-headers, points, temps = filereader.tempdistread(pointscale=1000.0, tempscale=1.0, x=0, y=0, z=650, swapxz=True)
+headers, points, temps = filereader.tempdistread(pointscale=1000.0, tempscale=1.0, x=0, y=0, z=-2250, mirrorxy=mirrxy, swapxz=True) # z=650
 xcoor = np.arange( -500, 500, 5.0, dtype=float)
 ycoor = np.arange(-500, 500, 5.0, dtype=float)
 zcoor = np.linspace(-200, 200, num=5)

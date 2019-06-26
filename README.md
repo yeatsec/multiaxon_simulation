@@ -14,7 +14,7 @@ eric.c.yeats@vanderbilt.edu
 
 ### Goals
 
-The goal of the simulation is:
+The goals of the simulation are:
 * to use a pdf of axon diameters to generate axons of varying diameter arranged in space in order to approximate a 3d morphology of the Left-Pleural-Abdominal-Connective (LPAC) nerve of Aplysia californica
 * to apply a 3d temperature distribution from simulated data (or from simple parameters) to the 3d LPAC nerve
 * to excite all axons in the population proximally, record their activity as they conduct action potentials through the region of the nerve immersed in the 3d temperature distribution, and to establish which axons are still 'active' and which are completely inhibited in the distal portion (post 3d-temp distribution)

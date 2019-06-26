@@ -49,12 +49,27 @@ class tempReader:
             data.append(list(filter(lambda x: x != "",line.split(self.splitstring))))
         return data
 
-    def tempdistread(self, pointscale=1.0, tempscale=1.0, x=0, y=0, z=0, swapxz=False):
+    def tempdistread(self, pointscale=1.0, tempscale=1.0, x=0, y=0, z=0, mirrorxy=False, swapxz=False):
         data = self.readfile()
         headers = list(data[:9])
         data = list(data[9:])
         points = list()
         temps = list()
+        # if mirrorxy, quadruple the data
+        if mirrorxy:
+            datalen = len(data)
+            for i in range(datalen):
+                point = list(map(lambda x: float(x), data[i]))
+                # mirror over x
+                point[0] *= -1
+                data.append(list(map(lambda x: str(x), point)))
+                # mirror over both
+                point[1] *= -1
+                data.append(list(map(lambda x: str(x), point)))
+                # just over y
+                point[0] *= -1
+                data.append(list(map(lambda x: str(x), point)))
+
         for line in data:
             points.append(list(map(lambda x: float(x) * pointscale,line[:3])))
             points[-1][0] += x

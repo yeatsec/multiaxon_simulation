@@ -1,13 +1,15 @@
+#!/usr/bin/env python
+
 import numpy as np
 import csv
 import io_resources as io_r
 from scipy.interpolate import griddata
 
 
-temperature_distribution = "SingleFiberInContact_Eric_BMES_5sec_41_7mW_200Hz_200us.txt"
+temperature_distribution = "newtempdist.txt"
 
-tempfilename = 'temps_bilinear'
-popfilename = 'fit2_r150.csv'
+tempfilename = 'newtemps_bilinear'
+popfilename = 'fit3_r250.csv'
 pop_path = './populations/' + popfilename
 
 default_temp = 20
@@ -23,7 +25,7 @@ nerve_z_locs = np.arange(start=(section_length/2), stop=nerve_length + (section_
 
 # load in the temperature distribution
 reader = io_r.tempReader(temperature_distribution, splitstring=' ')
-headers, points, temps = reader.tempdistread(pointscale=1000.0, tempscale=1.0, x=block_location, y=0, z=650, swapxz=True)
+headers, points, temps = reader.tempdistread(pointscale=1000.0, tempscale=1.0, x=block_location, y=0, z=-2250, mirrorxy=True, swapxz=True)
 reader.tempreader_close()
 
 points, temps = np.array(points), np.array(temps)

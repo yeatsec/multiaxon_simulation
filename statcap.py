@@ -5,10 +5,10 @@ import matplotlib.pyplot as plt
 
 # have a list of filenames
 
-levels = np.arange(0.70, 1.20, 0.10, float)
+levels = np.arange(0.60, 1.50, 0.10, float)
 levels[0] = 0.0
-cap_filenames = ["fit2_r150_" + str(int((x+0.001)*100)) + "_tempdataxz" for x in levels]
-colors = ['k', 'b', 'g', 'r', 'c']#, 'y']
+cap_filenames = ["fit3_r250_" + str(int((x+0.001)*100)) + "_tempdataxz" for x in levels]
+colors = ['k', 'b', 'g', 'r', 'c', 'm', 'y', '0.5']#, 'y']
 labels = ['Peak Temp ' + str(round(lvl*20.84, 1) + 20) + 'C' for lvl in levels]
 y_lims = None # (-0.5, 0.5)
 timesteps = np.arange(0, 40, 0.025, dtype=float) # CHECK TSTO)P
@@ -26,6 +26,8 @@ for ci, cap in enumerate(caps):
     plt.plot(timesteps, cap, linewidth=2, color=colors[ci%len(colors)], label=labels[ci])
 plt.ylim(y_lims)
 plt.legend()
+plt.xlabel("Time (ms)")
+plt.ylabel("Voltage (mV)")
 plt.savefig("combined_cap2.png", dpi=600)
 plt.show()
 
@@ -61,6 +63,10 @@ normacts = [act/actmax for act in actprops]
 
 plt.figure()
 plt.scatter(normaocs, normacts)
+plt.title("Comparison of Normalized AUC and Uninhibited Axon Proportion")
+plt.ylabel("Uninhibited Proportion of Axons")
+plt.xlabel("Normalized Area Under the Curve (AUC)")
+plt.savefig("auc_comparison.png", dpi=600)
 plt.show()
 
 print aocs
